@@ -1,5 +1,5 @@
 // ===== CIS Quiz Service Worker =====
-const CACHE_NAME = 'cis-quiz-v1';
+const CACHE_NAME = 'cis-quiz-v2';
 const ASSETS = [
   './',
   './index.html',
