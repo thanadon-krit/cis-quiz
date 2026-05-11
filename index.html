@@ -21,6 +21,21 @@
 </head>
 <body>
 
+<!-- ===== PASSWORD SCREEN ===== -->
+<div id="screen-password" class="screen active" style="display:flex;align-items:center;justify-content:center;min-height:100vh;">
+  <div class="password-box">
+    <div class="password-logo">🎓</div>
+    <h2 class="password-title">CIS – Digital Foundations</h2>
+    <p class="password-sub">Enter password to continue</p>
+    <div class="password-input-wrap">
+      <input type="password" id="password-input" class="password-input" placeholder="Password"
+        onkeydown="if(event.key==='Enter')checkPassword()" autocomplete="current-password" />
+      <button class="password-btn" onclick="checkPassword()">Enter →</button>
+    </div>
+    <div class="password-error" id="password-error" style="display:none">❌ Incorrect password</div>
+  </div>
+</div>
+
 <!-- ===== LANDING SCREEN ===== -->
 <div id="screen-landing" class="screen active">
   <div class="landing-wrapper">
@@ -228,6 +243,33 @@
 
 <script src="questions.js"></script>
 <script src="app.js"></script>
+<script>
+  // ===== PASSWORD GATE =====
+  (function() {
+    const PASS_KEY = 'cis-quiz-auth';
+    const CORRECT = 'ServiceNow1234';
+    function unlock() {
+      document.getElementById('screen-password').style.display = 'none';
+      document.getElementById('screen-landing').classList.add('active');
+    }
+    if (sessionStorage.getItem(PASS_KEY) === '1') { unlock(); return; }
+    document.getElementById('screen-landing').classList.remove('active');
+    document.getElementById('screen-password').style.display = 'flex';
+    window.checkPassword = function() {
+      const val = document.getElementById('password-input').value;
+      const err = document.getElementById('password-error');
+      if (val === CORRECT) {
+        sessionStorage.setItem(PASS_KEY, '1');
+        err.style.display = 'none';
+        unlock();
+      } else {
+        err.style.display = 'block';
+        document.getElementById('password-input').value = '';
+        document.getElementById('password-input').focus();
+      }
+    };
+  })();
+</script>
 <script>
   // Register service worker for PWA
   if ('serviceWorker' in navigator) {
