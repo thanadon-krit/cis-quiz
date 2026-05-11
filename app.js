@@ -14,11 +14,84 @@ let state = {
   ddSelected: null,  // currently selected drag-drop item chip
 };
 
+// ===== PROGRESS (Resume) =====
+const PROGRESS_KEY = 'cis-quiz-progress';
+
+function saveProgress() {
+  try {
+    const progress = {
+      questions: state.questions,
+      current: state.current,
+      answers: state.answers,
+      flags: [...state.flags],
+      mode: state.mode,
+      order: state.order,
+      shuffleChoices: state.shuffleChoices,
+      timerSeconds: state.timerSeconds,
+      savedAt: Date.now()
+    };
+    localStorage.setItem(PROGRESS_KEY, JSON.stringify(progress));
+  } catch(e) {}
+}
+
+function loadProgress() {
+  try { return JSON.parse(localStorage.getItem(PROGRESS_KEY)); }
+  catch { return null; }
+}
+
+function clearProgress() {
+  localStorage.removeItem(PROGRESS_KEY);
+}
+
+function resumeQuiz() {
+  const progress = loadProgress();
+  if (!progress) return;
+  state.questions    = progress.questions;
+  state.current      = progress.current;
+  state.answers      = progress.answers || {};
+  state.flags        = new Set(progress.flags || []);
+  state.mode         = progress.mode;
+  state.order        = progress.order;
+  state.shuffleChoices = progress.shuffleChoices;
+  state.timerSeconds = progress.timerSeconds || 0;
+  state.ddSelected   = null;
+  clearInterval(state.timerInterval);
+  showScreen('quiz');
+  buildQuestionGrid();
+  renderQuestion();
+  startTimer();
+}
+
+function renderResume() {
+  const progress = loadProgress();
+  const section = document.getElementById('resume-section');
+  if (!section) return;
+  if (!progress || !progress.questions || !progress.questions.length) {
+    section.style.display = 'none';
+    return;
+  }
+  const answered = Object.keys(progress.answers || {}).length;
+  const total = progress.questions.length;
+  const modeLabel = progress.mode === 'practice' ? '📖 Practice' : '🎯 Exam';
+  const qNum = progress.current + 1;
+  section.style.display = 'block';
+  section.innerHTML = `
+    <div class="resume-card">
+      <div class="resume-info">
+        <div class="resume-title">📌 Continue where you left off</div>
+        <div class="resume-detail">Q${qNum} of ${total} &nbsp;·&nbsp; ${answered} answered &nbsp;·&nbsp; ${modeLabel}</div>
+      </div>
+      <button class="btn-resume" onclick="resumeQuiz()">Resume →</button>
+    </div>
+  `;
+}
+
 // ===== INIT =====
 document.addEventListener('DOMContentLoaded', () => {
   populateSectionFilter();
   document.getElementById('total-q-count').textContent = QUESTIONS.length;
   applyTheme(localStorage.getItem('cis-theme') || 'dark');
+  renderResume();
   renderHistory();
 });
 
@@ -83,6 +156,7 @@ function startQuiz() {
   state.timerSeconds = 0;
   state.ddSelected = null;
   clearInterval(state.timerInterval);
+  clearProgress();
 
   showScreen('quiz');
   buildQuestionGrid();
@@ -541,6 +615,7 @@ function selectAnswer(letter) {
     applyExamUI(sel);
     rebuildMultiConfirm();
   }
+  saveProgress();
   updateGridBtn();
 }
 
@@ -622,12 +697,14 @@ function navigate(dir) {
   if (next < 0) return;
   if (next >= state.questions.length) { confirmFinish(); return; }
   state.current = next;
+  saveProgress();
   renderQuestion();
   document.querySelector('.quiz-main').scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function jumpTo(i) {
   state.current = i;
+  saveProgress();
   renderQuestion();
   document.querySelector('.quiz-main').scrollTo({ top: 0, behavior: 'smooth' });
   if (window.innerWidth < 640) toggleSidebar();
@@ -657,7 +734,7 @@ function confirmCancel() {
   state.confirmCallback = null;
 }
 function confirmGoHome() {
-  showConfirm('Back to Home', 'Your progress will be lost. Are you sure?', goHome);
+  goHome(); // progress is auto-saved, no warning needed
 }
 function confirmFinish() {
   const answered = Object.keys(state.answers).length;
@@ -671,6 +748,7 @@ function confirmFinish() {
 
 // ===== SUBMIT / RESULTS =====
 function submitExam() {
+  clearProgress(); // quiz done — remove saved progress
   clearInterval(state.timerInterval);
   let correct = 0;
   const total = state.questions.length;
@@ -833,6 +911,7 @@ function restartQuiz() { startQuiz(); }
 function goHome() {
   clearInterval(state.timerInterval);
   state.ddRevealed = {};
+  renderResume();
   renderHistory();
   showScreen('landing');
 }

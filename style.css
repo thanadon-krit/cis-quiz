@@ -952,3 +952,48 @@ body {
   font-size: 14px;
   font-weight: 500;
 }
+
+/* ===== RESUME CARD ===== */
+.resume-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: linear-gradient(135deg, #2d1f47, #1e2d47);
+  border: 1.5px solid var(--accent);
+  border-radius: 14px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+}
+[data-theme="light"] .resume-card {
+  background: linear-gradient(135deg, #f3eaff, #eaf0ff);
+  border-color: var(--accent);
+}
+.resume-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.resume-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+.resume-detail {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.btn-resume {
+  padding: 10px 20px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .2s;
+  flex-shrink: 0;
+}
+.btn-resume:hover { background: var(--accent-l); }
