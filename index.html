@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>CIS - Digital Foundations Practice Test</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#a435f0" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <!-- iOS -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="CIS Quiz" />
+  <link rel="apple-touch-icon" href="icons/icon-152x152.png" />
+  <!-- Description -->
+  <meta name="description" content="CIS Digital Foundations practice test — 167 questions, MCQ + Drag &amp; Match" />
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ===== LANDING SCREEN ===== -->
+<div id="screen-landing" class="screen active">
+  <div class="landing-wrapper">
+
+    <!-- Theme toggle top-right -->
+    <div class="landing-topbar">
+      <button class="theme-toggle" onclick="toggleTheme()" id="theme-btn" title="Toggle theme">🌙 Dark</button>
+    </div>
+
+    <div class="landing-badge">Practice Test</div>
+    <h1 class="landing-title">CIS – Digital Foundations</h1>
+    <p class="landing-sub">Certified Implementation Specialist</p>
+
+    <div class="landing-stats">
+      <div class="stat-box">
+        <span class="stat-num" id="total-q-count">167</span>
+        <span class="stat-label">Questions</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-num">5</span>
+        <span class="stat-label">Sections</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-num">MCQ+</span>
+        <span class="stat-label">Format</span>
+      </div>
+    </div>
+
+    <!-- Quiz Mode -->
+    <div class="section-label">Quiz Mode</div>
+    <div class="mode-cards">
+      <div class="mode-card selected" id="mode-practice" onclick="selectMode('practice')">
+        <div class="mode-icon">📖</div>
+        <div class="mode-title">Practice Mode</div>
+        <div class="mode-desc">See answer &amp; explanation after each question</div>
+      </div>
+      <div class="mode-card" id="mode-exam" onclick="selectMode('exam')">
+        <div class="mode-icon">🎯</div>
+        <div class="mode-title">Exam Mode</div>
+        <div class="mode-desc">Answer all, then see your final result</div>
+      </div>
+    </div>
+
+    <!-- Question Order -->
+    <div class="section-label">Question Order</div>
+    <div class="order-cards">
+      <div class="order-card selected" id="order-fixed" onclick="selectOrder('fixed')">
+        <span class="order-icon">📋</span>
+        <span class="order-title">Fixed Order</span>
+        <span class="order-desc">Questions as in original file</span>
+      </div>
+      <div class="order-card" id="order-random" onclick="selectOrder('random')">
+        <span class="order-icon">🔀</span>
+        <span class="order-title">Random</span>
+        <span class="order-desc">Shuffle questions</span>
+      </div>
+    </div>
+
+    <!-- Shuffle Choices -->
+    <label class="shuffle-label">
+      <input type="checkbox" id="shuffle-choices" />
+      <span class="shuffle-text">Shuffle answer choices</span>
+    </label>
+
+    <!-- Section Filter -->
+    <div class="filter-row">
+      <label class="filter-label">Filter by Section:</label>
+      <select id="section-filter" class="section-select">
+        <option value="all">All Sections</option>
+      </select>
+    </div>
+
+    <button class="btn-start" onclick="startQuiz()">Start Quiz →</button>
+
+    <!-- ===== HISTORY SECTION ===== -->
+    <div class="history-section" id="history-section" style="display:none">
+      <div class="history-header">
+        <span class="section-label" style="margin:0">Recent Attempts</span>
+        <button class="btn-clear-history" onclick="clearHistory()">Clear</button>
+      </div>
+      <div class="history-list" id="history-list"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===== QUIZ SCREEN ===== -->
+<div id="screen-quiz" class="screen">
+  <div class="quiz-layout">
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-title">Questions</div>
+        <button class="sidebar-toggle" onclick="toggleSidebar()">✕</button>
+      </div>
+      <div class="sidebar-legend">
+        <span class="legend-dot dot-answered"></span> Correct
+        <span class="legend-dot dot-wrong"></span> Wrong
+        <span class="legend-dot dot-current"></span> Current
+        <span class="legend-dot dot-flagged"></span> Flagged
+        <span class="legend-dot dot-unanswered"></span> Skipped
+      </div>
+      <div class="question-grid" id="question-grid"></div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="quiz-main">
+      <!-- Top Bar -->
+      <div class="topbar">
+        <button class="btn-icon" onclick="toggleSidebar()" title="Toggle sidebar">☰</button>
+        <div class="progress-container">
+          <div class="progress-bar" id="progress-bar"></div>
+        </div>
+        <div class="topbar-info">
+          <span id="q-counter">1 / 167</span>
+        </div>
+        <div class="timer" id="timer">00:00</div>
+        <button class="btn-icon" onclick="toggleTheme()" id="quiz-theme-btn" title="Toggle theme">🌙</button>
+        <button class="btn-icon btn-home" onclick="confirmGoHome()" title="Back to home">🏠</button>
+      </div>
+
+      <!-- Question Card -->
+      <div class="question-card" id="question-card">
+        <div class="question-section-tag" id="q-section-tag"></div>
+        <div class="question-meta-row">
+          <div class="question-number" id="q-number">Question 1</div>
+          <div class="multi-badge" id="multi-badge" style="display:none">Choose all correct answers</div>
+        </div>
+        <div class="question-text" id="q-text"></div>
+        <div class="options-list" id="options-list"></div>
+
+        <!-- Explanation (practice mode) -->
+        <div class="explanation-box" id="explanation-box" style="display:none">
+          <div class="explanation-header">
+            <span class="explanation-icon">💡</span>
+            <span>Explanation</span>
+          </div>
+          <div class="explanation-text" id="explanation-text"></div>
+        </div>
+      </div>
+
+      <!-- Navigation -->
+      <div class="nav-row">
+        <button class="btn-nav" id="btn-prev" onclick="navigate(-1)">← Previous</button>
+        <button class="btn-flag" id="btn-flag" onclick="flagQuestion()">🚩 Flag</button>
+        <button class="btn-nav btn-next" id="btn-next" onclick="navigate(1)">Next →</button>
+      </div>
+
+      <!-- Finish Row (always visible) -->
+      <div class="finish-row">
+        <button class="btn-finish" onclick="confirmFinish()">⏹ Finish &amp; See Results</button>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ===== RESULTS SCREEN ===== -->
+<div id="screen-results" class="screen">
+  <div class="results-wrapper">
+    <div class="results-header">
+      <div class="results-emoji" id="results-emoji">🎉</div>
+      <h2 class="results-title">Quiz Complete!</h2>
+      <div class="results-score" id="results-score"></div>
+      <div class="results-pct" id="results-pct"></div>
+    </div>
+
+    <div class="results-breakdown" id="results-breakdown"></div>
+
+    <div class="donut-chart-wrap">
+      <canvas id="donut-chart" width="160" height="160"></canvas>
+    </div>
+
+    <div class="results-actions">
+      <button class="btn-start" onclick="reviewAnswers()">Review Answers</button>
+      <button class="btn-outline" onclick="restartQuiz()">Try Again</button>
+      <button class="btn-outline" onclick="goHome()">🏠 Home</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== REVIEW SCREEN ===== -->
+<div id="screen-review" class="screen">
+  <div class="review-wrapper">
+    <div class="review-topbar">
+      <button class="btn-outline" onclick="goHome()">🏠 Home</button>
+      <h2>Review Answers</h2>
+      <button class="btn-outline" onclick="showScreen('results')">← Results</button>
+    </div>
+    <div class="review-list" id="review-list"></div>
+  </div>
+</div>
+
+<!-- ===== CONFIRM DIALOG ===== -->
+<div id="confirm-overlay" class="confirm-overlay" style="display:none">
+  <div class="confirm-box">
+    <div class="confirm-title" id="confirm-title">Are you sure?</div>
+    <div class="confirm-msg" id="confirm-msg"></div>
+    <div class="confirm-actions">
+      <button class="btn-nav btn-next" id="confirm-ok" onclick="confirmOk()">Confirm</button>
+      <button class="btn-nav" onclick="confirmCancel()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script src="questions.js"></script>
+<script src="app.js"></script>
+<script>
+  // Register service worker for PWA
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  }
+</script>
+</body>
+</html>
